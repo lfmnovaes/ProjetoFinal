@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="build" path="java"/>
+	<classpathentry kind="var" path="JRE_LIB" rootpath="JRE_SRCROOT" sourcepath="JRE_SRC"/>
+	<classpathentry kind="con" path="/home/user/contiki/tools/cooja"/>
+	<classpathentry kind="lib" path="/home/user/contiki/tools/cooja/lib/jdom.jar"/>
+	<classpathentry kind="lib" path="/home/user/contiki/tools/cooja/lib/log4j.jar"/>
+	<classpathentry kind="lib" path="/home/user/contiki/tools/cooja/lib/jsyntaxpane.jar"/>
+	<classpathentry kind="lib" path="/home/user/contiki/tools/cooja/lib/swingx-all-1.6.4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
