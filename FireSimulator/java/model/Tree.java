@@ -19,6 +19,7 @@ public class Tree {
 	}
 	public void setTreeState(TreeState treeState) {
 		this.treeState = treeState;
+		this.timer = treeState.getDuration();
 	}
 	public double getxPosition() {
 		return xPosition;
