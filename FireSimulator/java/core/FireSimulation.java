@@ -1,9 +1,17 @@
 package core;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.apache.log4j.Logger;
@@ -13,8 +21,7 @@ import org.contikios.cooja.PluginType;
 import org.contikios.cooja.Simulation;
 import org.contikios.cooja.TimeEvent;
 import org.contikios.cooja.VisPlugin;
-import org.contikios.cooja.dialogs.MessageListText;
-import org.contikios.cooja.dialogs.MessageListUI;
+import org.contikios.cooja.dialogs.MessageList;
 import org.contikios.cooja.mspmote.SkyMote;
 import org.contikios.cooja.mspmote.interfaces.*;
 import org.jdom.Element;
@@ -22,6 +29,7 @@ import org.jdom.Element;
 import model.MoteRangeTree;
 import model.Tree;
 import model.TreeState;
+import visualElements.JPanelTreeMesh;
 
 @PluginType(PluginType.SIM_PLUGIN)
 public class FireSimulation extends VisPlugin{
@@ -32,7 +40,7 @@ public class FireSimulation extends VisPlugin{
 	
 	private static final double TEMPERATURE_RANGE = 7.0;
 	
-	private static final double SPACE_BETWEEN_TREES = 5.0;
+	private static final double SPACE_BETWEEN_TREES = 10.0;
 	private static final double EXTRA_TREES = 2.0;
 	
 	private static final double GROWN_TREE_TO_HOT = 0.2;
@@ -48,36 +56,42 @@ public class FireSimulation extends VisPlugin{
 	private ArrayList<MoteRangeTree> treesInRangeMote;
 	
 	private Simulation simulation;
-	private MessageListUI logFireSpread;
-	private MessageListUI logTemp;
+	private MessageList logTemp;
+	
+	private JPanelTreeMesh malhaArvoresPainel;
 	
 	public FireSimulation(Simulation simulation, final Cooja gui) {
 		super("FireSimulation", gui, false);
 		this.simulation = simulation;
 		
-		
-		
-		this.logFireSpread = new MessageListUI();
-		
-		this.logTemp = new MessageListUI();
-		
-		logFireSpread.addPopupMenuItem(null, true);
-	    add(new JScrollPane(logFireSpread));
+		this.logTemp = new MessageList();
 	    
-	    setSize(500,200);
+	    setSize(500,400);
 	    
 	    logTemp.addPopupMenuItem(null, true);
-	    add(new JScrollPane(logTemp));
+	    add(new JScrollPane(logTemp), BorderLayout.SOUTH);
 	    
-	    logFireSpread.addMessage("Fire Simulation started!");
+	    logTemp.addMessage("Fire Simulation started!");
 	    
-	    setSize(500,200);
+	    //setSize(500,200);
+	    
+	    malhaArvoresPainel = new JPanelTreeMesh();
+	    malhaArvoresPainel.setSize(300, 200);
+	    //malhaArvoresPainel.setPreferredSize(new Dimension(300,300));
+	    
+	    //getContentPane().add(malhaArvoresPainel, BorderLayout.NORTH);
+	    
+	    add(malhaArvoresPainel, BorderLayout.NORTH);
+	    
+	    malhaArvoresPainel.setLayout(new BoxLayout(malhaArvoresPainel, BoxLayout.X_AXIS));
+	    
+	    //malhaArvoresPainel.add(new JButton(startPlugin));
 		
 	}
 	
 	public void startPlugin() {
 		if(simulation.getMotesCount() == 0){
-			logFireSpread.addMessage("Simulation without motes! Create at least one mote before loading this plugin.");
+			logTemp.addMessage("Simulation without motes! Create at least one mote before loading this plugin.");
 			return;
 		}
 		
@@ -135,7 +149,17 @@ public class FireSimulation extends VisPlugin{
 		
 		for(int i=0; i<xTreeValue; i++) {
 			for(int j=0; j<yTreeValue; j++) {
-				treeMesh[i][j] = new Tree(minX + (i-(int)EXTRA_TREES)*SPACE_BETWEEN_TREES, minY + (j-(int)EXTRA_TREES)*SPACE_BETWEEN_TREES);			
+				Double x = minX + (i-(int)EXTRA_TREES)*SPACE_BETWEEN_TREES;
+				Double y = minY + (j-(int)EXTRA_TREES)*SPACE_BETWEEN_TREES;
+				
+				Double offsetX = (minX + -1*EXTRA_TREES*SPACE_BETWEEN_TREES) < 0 ? (minX + -1*EXTRA_TREES*SPACE_BETWEEN_TREES)*-1 + 5 : 0;
+				Double offsetY = (minY + -1*EXTRA_TREES*SPACE_BETWEEN_TREES) < 0 ? (minY + -1*EXTRA_TREES*SPACE_BETWEEN_TREES)*-1 + 5: 0;
+				
+				treeMesh[i][j] = new Tree(x, y);
+				
+				malhaArvoresPainel.addJPanelTree(x.intValue() + offsetX.intValue(), y.intValue() + offsetY.intValue(), 5, 5);
+				
+				//logTemp.addMessage("Arvores criada na posicao: (" + (x.intValue() + offsetX.intValue()) + ", " + (y.intValue() + offsetY.intValue()) + ")");
 			}
 		}
 	}
@@ -263,7 +287,7 @@ public class FireSimulation extends VisPlugin{
 				if(treeMesh[j][i].getTreeState() == TreeState.RISK_FIRE){
 					if(Math.random() <= RISK_FIRE_IGNITES){
 						treeMesh[j][i].setTreeState(TreeState.FRESH_LIT);
-						logFireSpread.addMessage("Tree: [" + j + "][" + i + "] just lit!");
+						logTemp.addMessage("Tree: [" + j + "][" + i + "] just lit!");
 					} else {
 						treeMesh[j][i].setTreeState(TreeState.HOT_TREE);
 					}
@@ -283,7 +307,7 @@ public class FireSimulation extends VisPlugin{
 				
 				if(treeMesh[j][i].getTreeState() == TreeState.GREY_CHARCOAL){
 					updateTreeOnFire(treeMesh[j][i], TreeState.ASHES);
-					logFireSpread.addMessage("Tree: [" + j + "][" + i + " became ashes!");
+					logTemp.addMessage("Tree: [" + j + "][" + i + " became ashes!");
 					
 				}
 			}
@@ -294,7 +318,7 @@ public class FireSimulation extends VisPlugin{
 		if(destination.getTreeState() == TreeState.GROWN_TREE || destination.getTreeState() == TreeState.HOT_TREE || destination.getTreeState() == TreeState.RISK_FIRE){
 			if(Math.random() <= ESTABLISHED_FIRE_SPREAD){
 				destination.setTreeState(TreeState.FRESH_LIT);
-				logFireSpread.addMessage("Fire spreding !");
+				logTemp.addMessage("Fire spreding !");
 			}
 		}
 	}
@@ -303,7 +327,7 @@ public class FireSimulation extends VisPlugin{
 		if(destination.getTreeState() == TreeState.GROWN_TREE || destination.getTreeState() == TreeState.HOT_TREE || destination.getTreeState() == TreeState.RISK_FIRE){
 			if(Math.random() <= GLOWING_FIRE_SPREAD){
 				destination.setTreeState(TreeState.FRESH_LIT);
-				logFireSpread.addMessage("Fire spreding !");
+				logTemp.addMessage("Fire spreding !");
 			}
 		}
 	}
@@ -315,6 +339,12 @@ public class FireSimulation extends VisPlugin{
 			tree.setTimer(tree.getTimer() - 1);
 		}
 	}
+	
+	private Action startPlugin = new AbstractAction("Start"){
+		public void actionPerformed(ActionEvent e){
+			logTemp.addMessage("Começo!");
+		}
+	};
 	
 	public static void main(String[] args) {
 		//FireSimulation fireSimulation = new FireSimulation(-14.3, 70.7, -50.1, 47.8, null);
