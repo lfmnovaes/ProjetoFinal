@@ -1,11 +1,14 @@
 package model;
 
+import java.awt.Rectangle;
+
 public class Tree {
 	
 	private double xPosition;
 	private double yPosition;
-	TreeState treeState;
-	int timer;
+	private TreeState treeState;
+	private int timer;
+	
 	
 	public Tree(double xPosition, double yPosition) {
 		super();

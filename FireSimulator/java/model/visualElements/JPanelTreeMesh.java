@@ -1,4 +1,4 @@
-package visualElements;
+package model.visualElements;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -14,14 +14,18 @@ public class JPanelTreeMesh extends JPanel{
 	private static final int PREF_WIDTH = 300;
 	private static final int PREF_HEIGHT = 300;
 	
-	private List<Rectangle> jPanelTrees;
+	private List<RectangleTree> jPanelTrees;
+	private Color fillColor;
 	
 	public JPanelTreeMesh(){
-		jPanelTrees = new ArrayList<Rectangle>();
+		jPanelTrees = new ArrayList<RectangleTree>();
 	}
 	
-	public void addJPanelTree(int x, int y, int width, int height){
-		Rectangle jPanelTree = new Rectangle(x, y, width, height);
+	public void setFillColor(Color fillColor){
+		this.fillColor = fillColor;
+	}
+	
+	public void addJPanelTree(RectangleTree jPanelTree){
 		jPanelTrees.add(jPanelTree);
 	}
 	
@@ -35,8 +39,8 @@ public class JPanelTreeMesh extends JPanel{
 		super.paintComponent(g);
 		
 		Graphics2D g2 = (Graphics2D) g;
-		for(Rectangle jPanelTree: jPanelTrees){
-			g2.setColor(Color.GREEN);
+		for(RectangleTree jPanelTree: jPanelTrees){
+			g2.setColor(jPanelTree.getTree().getTreeState().getColor());
 			g2.fillRect(jPanelTree.x, jPanelTree.y, jPanelTree.width, jPanelTree.height);
 			g2.setColor(Color.BLACK);
 			g2.draw(jPanelTree);

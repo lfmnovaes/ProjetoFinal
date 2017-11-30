@@ -2,6 +2,7 @@ package core;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +30,8 @@ import org.jdom.Element;
 import model.MoteRangeTree;
 import model.Tree;
 import model.TreeState;
-import visualElements.JPanelTreeMesh;
+import model.visualElements.JPanelTreeMesh;
+import model.visualElements.RectangleTree;
 
 @PluginType(PluginType.SIM_PLUGIN)
 public class FireSimulation extends VisPlugin{
@@ -50,6 +52,9 @@ public class FireSimulation extends VisPlugin{
 	
 	private static final double ESTABLISHED_FIRE_SPREAD = 0.1;
 	private static final double GLOWING_FIRE_SPREAD = 0.4;
+	
+	private static final int SPACE_BETWEEN_TREE_X = 5;
+	private static final int SPACE_BETWEEN_TREE_Y = 5;
 	
 	private Tree[][] treeMesh;
 	private ArrayList<Mote> motes;
@@ -157,7 +162,15 @@ public class FireSimulation extends VisPlugin{
 				
 				treeMesh[i][j] = new Tree(x, y);
 				
-				malhaArvoresPainel.addJPanelTree(x.intValue() + offsetX.intValue(), y.intValue() + offsetY.intValue(), 5, 5);
+				RectangleTree jPanelTree = new RectangleTree(
+						x.intValue() + offsetX.intValue(),
+						y.intValue() + offsetY.intValue(),
+						SPACE_BETWEEN_TREE_X,
+						SPACE_BETWEEN_TREE_Y,
+						treeMesh[i][j]
+						);
+				
+				malhaArvoresPainel.addJPanelTree(jPanelTree);
 				
 				//logTemp.addMessage("Arvores criada na posicao: (" + (x.intValue() + offsetX.intValue()) + ", " + (y.intValue() + offsetY.intValue()) + ")");
 			}
@@ -188,6 +201,8 @@ public class FireSimulation extends VisPlugin{
 	    	updateTreeStates();
 	    	
 	    	updateMotesSensorTemperature();
+	    	
+	    	malhaArvoresPainel.repaint();
 	    	
 	    	simulation.scheduleEvent(this, (long) (simulation.getSimulationTime() + TIME_BETWEEN_TURNS*1000*Simulation.MILLISECOND));
 	    }
