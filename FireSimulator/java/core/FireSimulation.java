@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +31,7 @@ import org.jdom.Element;
 import model.MoteRangeTree;
 import model.Tree;
 import model.TreeState;
+import model.visualElements.JPanelTempLabels;
 import model.visualElements.JPanelTreeMesh;
 import model.visualElements.RectangleTree;
 
@@ -40,15 +42,15 @@ public class FireSimulation extends VisPlugin{
 	
 	private static final double TIME_BETWEEN_TURNS = 5.0;
 	
-	private static final double TEMPERATURE_RANGE = 7.0;
+	private static final double TEMPERATURE_RANGE = 10.0;
 	
 	private static final double SPACE_BETWEEN_TREES = 10.0;
 	private static final double EXTRA_TREES = 2.0;
 	
-	private static final double GROWN_TREE_TO_HOT = 0.2;
+	private static final double GROWN_TREE_TO_HOT = 0.05;
 	private static final double HOT_TREE_TO_RISK = 0.2;
 	
-	private static final double RISK_FIRE_IGNITES = 0.02;
+	private static final double RISK_FIRE_IGNITES = 0.01;
 	
 	private static final double ESTABLISHED_FIRE_SPREAD = 0.1;
 	private static final double GLOWING_FIRE_SPREAD = 0.4;
@@ -64,6 +66,7 @@ public class FireSimulation extends VisPlugin{
 	private MessageList logTemp;
 	
 	private JPanelTreeMesh malhaArvoresPainel;
+	private JPanelTempLabels jPanelTempLabels;
 	
 	public FireSimulation(Simulation simulation, final Cooja gui) {
 		super("FireSimulation", gui, false);
@@ -71,27 +74,24 @@ public class FireSimulation extends VisPlugin{
 		
 		this.logTemp = new MessageList();
 	    
-	    setSize(500,400);
+	    setSize(800,600);
 	    
-	    logTemp.addPopupMenuItem(null, true);
+	    //logTemp.addPopupMenuItem(null, true);
 	    add(new JScrollPane(logTemp), BorderLayout.SOUTH);
 	    
 	    logTemp.addMessage("Fire Simulation started!");
 	    
-	    //setSize(500,200);
-	    
 	    malhaArvoresPainel = new JPanelTreeMesh();
 	    malhaArvoresPainel.setSize(300, 200);
-	    //malhaArvoresPainel.setPreferredSize(new Dimension(300,300));
 	    
-	    //getContentPane().add(malhaArvoresPainel, BorderLayout.NORTH);
+	    add(malhaArvoresPainel, BorderLayout.WEST);
 	    
-	    add(malhaArvoresPainel, BorderLayout.NORTH);
+	    jPanelTempLabels = new JPanelTempLabels();
+	    jPanelTempLabels.setSize(200, 400);	    
 	    
-	    malhaArvoresPainel.setLayout(new BoxLayout(malhaArvoresPainel, BoxLayout.X_AXIS));
+	    add(jPanelTempLabels, BorderLayout.EAST);
 	    
-	    //malhaArvoresPainel.add(new JButton(startPlugin));
-		
+	    malhaArvoresPainel.setLayout(new BoxLayout(malhaArvoresPainel, BoxLayout.X_AXIS));		
 	}
 	
 	public void startPlugin() {
@@ -103,6 +103,11 @@ public class FireSimulation extends VisPlugin{
 		motes = new ArrayList<Mote>(Arrays.asList(simulation.getMotes()));
 		
 		treesInRangeMote = new ArrayList<MoteRangeTree>();
+		
+		//Adding a JLabel for each mote
+		for(int i=0; i<motes.size(); i++) {
+			jPanelTempLabels.addJPanel("Sensor " + i + " Temperature:");
+		}		
 		
 		generateTrees();
 		
@@ -171,8 +176,6 @@ public class FireSimulation extends VisPlugin{
 						);
 				
 				malhaArvoresPainel.addJPanelTree(jPanelTree);
-				
-				//logTemp.addMessage("Arvores criada na posicao: (" + (x.intValue() + offsetX.intValue()) + ", " + (y.intValue() + offsetY.intValue()) + ")");
 			}
 		}
 	}
@@ -217,10 +220,12 @@ public class FireSimulation extends VisPlugin{
 		double totalTemperatureRange = 0.0;
 		
 		for(int i=0; i<this.motes.size(); i++){
+			
 			for(int j=0; j<treesInRangeMote.get(i).getTreesInRange().size(); j++){
-				totalRange += treesInRangeMote.get(i).getTreesRange().get(j);
 				
-				totalTemperatureRange += treesInRangeMote.get(i).getTreesInRange().get(j).getTreeTemperature()*(TEMPERATURE_RANGE - treesInRangeMote.get(i).getTreesRange().get(j));
+				totalRange += 1/treesInRangeMote.get(i).getTreesRange().get(j)*treesInRangeMote.get(i).getTreesRange().get(j);
+				
+				totalTemperatureRange += treesInRangeMote.get(i).getTreesInRange().get(j).getTreeTemperature()*1/treesInRangeMote.get(i).getTreesRange().get(j)*treesInRangeMote.get(i).getTreesRange().get(j);
 			}
 			
 			SkyMote skyMote = (SkyMote)this.motes.get(i);
@@ -229,7 +234,12 @@ public class FireSimulation extends VisPlugin{
 			
 			skyTemperature.setTemperature(totalTemperatureRange/totalRange);
 			
-			logTemp.addMessage("Temperature do mote " + motes.get(i).getID() + ": " + totalTemperatureRange/totalRange);
+			DecimalFormat decimalFormat = new DecimalFormat();
+			decimalFormat.setMaximumFractionDigits(2);
+			
+			jPanelTempLabels.updateJLabelText("Sensor " + (i + 1) + " Temperature:" + decimalFormat.format(totalTemperatureRange/totalRange), i);
+			
+			//logTemp.addMessage("Temperature do mote " + motes.get(i).getID() + ": " + totalTemperatureRange/totalRange);
 			
 			totalRange = 0.0;
 			totalTemperatureRange = 0.0;
@@ -302,7 +312,6 @@ public class FireSimulation extends VisPlugin{
 				if(treeMesh[j][i].getTreeState() == TreeState.RISK_FIRE){
 					if(Math.random() <= RISK_FIRE_IGNITES){
 						treeMesh[j][i].setTreeState(TreeState.FRESH_LIT);
-						logTemp.addMessage("Tree: [" + j + "][" + i + "] just lit!");
 					} else {
 						treeMesh[j][i].setTreeState(TreeState.HOT_TREE);
 					}
@@ -322,7 +331,6 @@ public class FireSimulation extends VisPlugin{
 				
 				if(treeMesh[j][i].getTreeState() == TreeState.GREY_CHARCOAL){
 					updateTreeOnFire(treeMesh[j][i], TreeState.ASHES);
-					logTemp.addMessage("Tree: [" + j + "][" + i + " became ashes!");
 					
 				}
 			}
@@ -333,7 +341,6 @@ public class FireSimulation extends VisPlugin{
 		if(destination.getTreeState() == TreeState.GROWN_TREE || destination.getTreeState() == TreeState.HOT_TREE || destination.getTreeState() == TreeState.RISK_FIRE){
 			if(Math.random() <= ESTABLISHED_FIRE_SPREAD){
 				destination.setTreeState(TreeState.FRESH_LIT);
-				logTemp.addMessage("Fire spreding !");
 			}
 		}
 	}
@@ -342,7 +349,6 @@ public class FireSimulation extends VisPlugin{
 		if(destination.getTreeState() == TreeState.GROWN_TREE || destination.getTreeState() == TreeState.HOT_TREE || destination.getTreeState() == TreeState.RISK_FIRE){
 			if(Math.random() <= GLOWING_FIRE_SPREAD){
 				destination.setTreeState(TreeState.FRESH_LIT);
-				logTemp.addMessage("Fire spreding !");
 			}
 		}
 	}
@@ -357,7 +363,6 @@ public class FireSimulation extends VisPlugin{
 	
 	private Action startPlugin = new AbstractAction("Start"){
 		public void actionPerformed(ActionEvent e){
-			logTemp.addMessage("Começo!");
 		}
 	};
 	

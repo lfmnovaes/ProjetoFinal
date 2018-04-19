@@ -19,7 +19,7 @@ public enum TreeState {
 	private final double minTemp;
 	private final Color color;
 	
-	private TreeState(int duration, double maxTemp, double minTemp, Color color) {
+	private TreeState(int duration, double minTemp, double maxTemp, Color color) {
 		this.duration = duration;
 		this.maxTemp = maxTemp;
 		this.minTemp = minTemp;
@@ -28,7 +28,14 @@ public enum TreeState {
 	
 	public double getTemperature(){
 		Random random = new Random();
-		return this.minTemp + (this.maxTemp - minTemp)*random.nextGaussian();
+		double media = (this.maxTemp + this.minTemp)/2;
+		double desvioPadrao = (this.maxTemp - this.minTemp)/6;
+		double result = desvioPadrao*random.nextGaussian() + media;
+		while(result < this.minTemp || result > this.maxTemp){
+			result = desvioPadrao*random.nextGaussian() + media;
+			//System.out.println(media + "|" + desvioPadrao + "|" + result);
+		}
+		return result;
 	}
 
 	public int getDuration() {
