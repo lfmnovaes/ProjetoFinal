@@ -42,7 +42,7 @@ public class FireSimulation extends VisPlugin{
 	
 	private static final double TIME_BETWEEN_TURNS = 5.0;
 	
-	private static final double TEMPERATURE_RANGE = 10.0;
+	private static final double TEMPERATURE_RANGE = 20.0;
 	
 	private static final double SPACE_BETWEEN_TREES = 10.0;
 	private static final double EXTRA_TREES = 2.0;
@@ -106,6 +106,8 @@ public class FireSimulation extends VisPlugin{
 		
 		//Adding a JLabel for each mote
 		for(int i=0; i<motes.size(); i++) {
+			malhaArvoresPainel.addMote(motes.get(i));
+			
 			jPanelTempLabels.addJPanel("Sensor " + i + " Temperature:");
 		}		
 		
@@ -136,9 +138,8 @@ public class FireSimulation extends VisPlugin{
 		double minY = motes.get(0).getInterfaces().getPosition().getYCoordinate();
 		double maxY = motes.get(0).getInterfaces().getPosition().getYCoordinate();
 		
-		
-		
 		for(int i=1; i<motes.size(); i++) {
+			
 			if(motes.get(i).getInterfaces().getPosition().getXCoordinate() < minX){
 				minX = motes.get(i).getInterfaces().getPosition().getXCoordinate();
 			} else if(motes.get(i).getInterfaces().getPosition().getXCoordinate() > maxX) {
@@ -168,8 +169,8 @@ public class FireSimulation extends VisPlugin{
 				treeMesh[i][j] = new Tree(x, y);
 				
 				RectangleTree jPanelTree = new RectangleTree(
-						x.intValue() + offsetX.intValue(),
-						y.intValue() + offsetY.intValue(),
+						x.intValue() + offsetX.intValue() - SPACE_BETWEEN_TREE_X/2,
+						y.intValue() + offsetY.intValue() - SPACE_BETWEEN_TREE_Y/2,
 						SPACE_BETWEEN_TREE_X,
 						SPACE_BETWEEN_TREE_Y,
 						treeMesh[i][j]
@@ -184,10 +185,11 @@ public class FireSimulation extends VisPlugin{
 		for(int t=0; t<this.motes.size(); t++){
 			
 			MoteRangeTree moteRangeTree = new MoteRangeTree(this.motes.get(t));
-			
+			logTemp.addMessage("Mote " + (t + 1) + " trees:");
 			for(int i=0; i<treeMesh[0].length; i++){
 				for(int j=0; j<treeMesh.length; j++){
 					if(MoteRangeTree.checkTreeRangeMote(treeMesh[j][i], this.motes.get(t), TEMPERATURE_RANGE)){
+						logTemp.addMessage("Tree [" + j + "][" + i + "]");
 						moteRangeTree.addTree(treeMesh[j][i]);
 					}
 				}
